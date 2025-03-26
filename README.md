@@ -1,12 +1,15 @@
 # WebLLM Chat Component
 
-A modern, sleek web component for AI chat interactions powered by WebLLM.
+A modern, sleek web component for AI chat interactions powered by WebLLM, refactored for improved maintainability and extensibility.
 
 ## Features
 
 - Native Web Component with no build step required
+- Modular architecture for easier maintenance and extension
 - Web Worker-based processing for smooth UI
-- Modern, responsive design with light/dark mode
+- Memory system with vector database for contextual conversations
+- Knowledge base integration for retrieving relevant information
+- Modern, responsive design with multiple theme options
 - Streaming responses with visual typing indication
 - Built on WebLLM for in-browser AI inference
 - Loads dependencies from CDN - no npm install needed
@@ -58,28 +61,80 @@ Add the component to your HTML:
 
 ### Advanced Usage
 
-The component supports customization via CSS variables:
+The component supports customization via attributes:
 
 ```html
-<style>
-  chat-component {
-    --primary-color: #4a90e2;
-    --background-color: #f9f9f9;
-    --message-user-bg: #e3f2fd;
-    --message-assistant-bg: #f5f5f7;
-  }
-</style>
+<chat-component 
+  brand="custom" 
+  primary-color="#6200ee" 
+  accent-color="#03dac6" 
+  border-radius="12px"
+  font-family="'Roboto', sans-serif">
+</chat-component>
+```
+
+## Project Structure
+
+The codebase has been refactored into a modular architecture:
+
+```
+chat-component/
+├── src/                    # Source code
+│   ├── components/         # Web components
+│   │   └── chat-component.js   # Main component class
+│   ├── services/           # Business logic
+│   │   ├── chat-service.js     # Chat messaging service
+│   │   ├── memory-service.js   # Memory management service
+│   │   └── theme-service.js    # Theme customization service
+│   ├── ui/                 # UI components
+│   │   ├── chat-header.js      # Header UI
+│   │   ├── chat-input.js       # Input area UI
+│   │   ├── chat-sidebar.js     # Sidebar UI
+│   │   ├── loading-container.js # Loading UI
+│   │   ├── memory-panel.js     # Memory panel UI
+│   │   └── model-selector.js   # Model selector UI
+│   ├── utils/              # Utilities
+│   │   ├── markdown-formatter.js # Markdown processing
+│   │   ├── storage.js          # Local storage utilities
+│   │   └── time-formatter.js   # Time formatting utilities
+│   ├── styles/             # Styles
+│   │   └── chat-styles.js      # Component styles
+│   └── index.js            # Main entry point
+├── lib/                    # Core libraries
+│   ├── entity-db.js        # Vector database
+│   ├── knowledge-loader.js # Knowledge base loader
+│   └── memory-manager.js   # Memory manager
+├── knowledge/              # Knowledge base files
+│   ├── example.md          # Example knowledge document
+│   └── index.json          # Knowledge base index
+├── chat-component.js       # Legacy entry point
+├── chat-worker.js          # Web worker for LLM inference
+├── index.html              # Demo page
+└── README.md               # This file
 ```
 
 ## API
 
 ### Attributes
 
-- `dark` - Enable dark mode
+- `brand` - Base brand theme (att, dark-sleek, neon-future)
+- `primary-color` - Main color for UI elements
+- `accent-color` - Secondary accent color
+- `border-radius` - Border radius for UI elements
+- `font-family` - Font family for text
+
+### Themes
+
+The component comes with several built-in themes:
+
+- `att` - AT&T branded theme (default)
+- `dark-sleek` - Modern dark theme with blue accents
+- `neon-future` - Cyberpunk-inspired theme with neon colors
 
 ### CSS Variables
 
 - `--primary-color` - Accent color for UI elements
+- `--primary-gradient` - Gradient for UI elements
 - `--secondary-color` - Secondary background color
 - `--text-color` - Text color
 - `--background-color` - Background color
@@ -87,6 +142,8 @@ The component supports customization via CSS variables:
 - `--shadow-color` - Color for shadows
 - `--message-user-bg` - Background for user messages
 - `--message-assistant-bg` - Background for assistant messages
+- `--sidebar-bg` - Background for sidebar
+- `--accent-color` - Accent color for highlights
 - `--font-family` - Font family
 
 ## Technical Details
@@ -95,6 +152,8 @@ The component supports customization via CSS variables:
 - Implements Shadow DOM for style encapsulation
 - Follows modern ES module patterns
 - Offloads model processing to web workers for UI responsiveness
+- Uses IndexedDB for memory storage via entity-db
+- Supports markdown rendering in messages
 
 ## License
 

@@ -30,6 +30,7 @@
       justify-content: center;
       padding: 20px;
       transition: background 0.5s ease;
+      color: #333;
     }
     
     body.dark-theme {
@@ -261,6 +262,10 @@
       document.body.classList.add('dark-theme');
       sunIcon.style.display = 'none';
       moonIcon.style.display = 'block';
+    } else {
+      document.body.classList.remove('dark-theme');
+      sunIcon.style.display = 'block';
+      moonIcon.style.display = 'none';
     }
     
     themeToggle.addEventListener('click', () => {
