@@ -23,7 +23,7 @@ class ChatComponent extends HTMLElement {
     }
     
     // Get brand attribute or default to AT&T
-    this.brand = this.getAttribute('brand') || 'att';
+    this.brand = this.getAttribute('brand') || 'myTheme';
     
     // Initialize services
     this.initializeServices();
@@ -67,7 +67,7 @@ class ChatComponent extends HTMLElement {
    */
   async connectedCallback() {
     // Load AT&T font if using AT&T theme
-    if (this.brand === 'att') {
+    if (this.brand === 'myTheme') {
       const fontLink = document.createElement('link');
       fontLink.href = 'https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap';
       fontLink.rel = 'stylesheet';
@@ -77,7 +77,7 @@ class ChatComponent extends HTMLElement {
     this.render();
     this.setupEventListeners();
     this.chatService.initWorker();
-    this.themeService.changeTheme('att');
+    this.themeService.changeTheme('myTheme');
     
     // Initialize memory and knowledge systems
     await this.memoryService.initialize();

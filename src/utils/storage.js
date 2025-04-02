@@ -35,7 +35,7 @@ export function saveChatHistory(chatHistory) {
  * @param {string} defaultTheme - Default theme to use if none is stored
  * @returns {string} The active theme 
  */
-export function getActiveTheme(defaultTheme = 'att') {
+export function getActiveTheme(defaultTheme = 'myTheme') {
   return localStorage.getItem('chat-theme') || defaultTheme;
 }
 

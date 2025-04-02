@@ -5,7 +5,7 @@ import { getDefaultThemes } from '../styles/chat-styles.js';
 import { getActiveTheme, saveActiveTheme } from '../utils/storage.js';
 
 export class ThemeService {
-  constructor(element, initialBrand = 'att') {
+  constructor(element, initialBrand = 'myTheme') {
     this.element = element;
     this.brand = initialBrand;
     this.defaultThemes = getDefaultThemes();

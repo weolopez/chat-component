@@ -70,12 +70,23 @@ async function generateResponse(messages) {
     }
     
     // Add system prompt if not present
+
     if (!messages.some(msg => msg.role === 'system')) {
       messages.unshift({
         role: 'system',
-        content: 'You are a helpful, friendly AI assistant. Provide concise and accurate responses.'
+        content: `You are a helpful, friendly AI assistant. 
+        Provide concise and accurate responses. 
+        `
       });
     }
+    //append to system prompt
+    // messages[0].content += `
+    //     Based on the given context and question, YOU MUST always provide the probability that the response is correct (0.0 to 1.0), with no other words or explanation.
+    //     For example with prompted: What state is the city of Atlanta in?
+    //     Answer:
+    //     Georgia
+    //     Probability: 0.99
+    //     `
     
     // Initialize an accumulating response string
     let accumulatedResponse = '';

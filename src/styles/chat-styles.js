@@ -1014,7 +1014,7 @@ export function getChatStyles() {
  */
 export function getDefaultThemes() {
   return {
-    'att': {
+    'myTheme': {
       primaryColor: '#00A9E0',
       primaryGradient: 'linear-gradient(135deg, #00A9E0 0%, #0568AE 100%)',
       secondaryColor: '#F2F2F2',

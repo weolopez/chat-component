@@ -25,7 +25,7 @@ npm install -g http-server
 # Start the server in the project directory
 http-server
 
-# Navigate to http://localhost:8080 in your browser
+# Navigate to http://localhost:80080 in your browser
 ```
 
 ## Browser Requirements
