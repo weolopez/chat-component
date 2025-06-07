@@ -1,5 +1,6 @@
 {
   "files": [
-    "knowledge/example.md"
+    "/chat-component/knowledge/example.md",
+    "/chat-component/knowledge/resume.json"
   ]
 }

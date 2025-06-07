@@ -245,7 +245,7 @@
   
   <script type="module">
     // Import web component
-    import './chat-component.js';
+    import './chat-component-openai.js';
     
     // Theme toggle functionality
     const themeToggle = document.getElementById('themeToggle');
@@ -277,5 +277,7 @@
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
     });
   </script>
+
+  <script src="/js/marked.min.js"></script>
 </body>
 </html>
