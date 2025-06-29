@@ -2,6 +2,7 @@ import { ApiService } from './api-service.js';
 import { HistoryService } from './history-service.js';
 import { MemoryManager } from './memory-manager.js';
 import { KnowledgeLoader } from './knowledge-loader.js';
+import { renderModelSelector } from '../components/model-selector.js';
 
 export class ChatManager extends EventTarget {
   constructor(config = {}) {
@@ -33,6 +34,10 @@ export class ChatManager extends EventTarget {
       console.warn('Knowledge system not available:', error.message);
       this.knowledgeLoader = null;
     }
+    this.availableModels = [
+      { id: "Qwen2.5-0.5B-Instruct-q0f16-MLC", name: "Qwen 0.5B (Fast)" },
+      { id: "DeepSeek-R1-Distill-Qwen-7B-q4f16_1-MLC", name: "DeepSeek 7B (Smart)" }
+    ];
   }
 
   async initialize() {

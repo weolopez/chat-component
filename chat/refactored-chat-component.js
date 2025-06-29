@@ -185,6 +185,7 @@ class ChatComponent extends HTMLElement {
   }
 
   setupChatManagerListeners() {
+
     this.chatManager.addEventListener('messageAdded', (e) => {
       this.updateMessageList();
       this.updateMemoryPanel();
@@ -226,14 +227,31 @@ class ChatComponent extends HTMLElement {
     });
   }
 
+  changeModel() {
+    //add dialog to new element in shadowRoot
+    let selectedModel = 'gpt-4o-mini'; // Default to GPT-4o Mini
+    let newDiv = document.createElement('div');
+    let dialog = `
+    <div class="controls-container">
+      <div class="model-select-container">
+        <label for="model-selector">Model:</label>
+        <select class="model-selector" id="model-selector">
+          ${this.availableModels.map(model => 
+            `<option value="${model.id}" ${model.id === selectedModel ? 'selected' : ''}>${model.name}</option>`
+          ).join('')}
+        </select>
+      </div>
+    </div>
+  `;
+    newDiv.innerHTML = dialog;
+    this.shadowRoot.appendChild(newDiv);
+  }
+
   setupEventListeners() {
     console.log('ChatComponent: Setting up event listeners...');
 
-    this.addEventListener('set-input', (e) => {
-      const text = e.detail.content;
-      this.setInput(text);
-      this.enableInput();
-    });
+    this.addEventListener('set-input', (e) => { const text = e.detail.content; this.setInput(text); this.enableInput(); });
+    this.addEventListener('change-model', (e) => this.changeModel());
 
     // Header events
     this.addEventListener('memory-toggle', () => this.toggleMemoryPanel());
@@ -479,6 +497,7 @@ class ChatComponent extends HTMLElement {
     if (messageInput) {
       messageInput.value = text;
       messageInput.focus();
+      messageInput.updateSendButtonState();
     }
   }
 
@@ -547,7 +566,16 @@ class ChatComponent extends HTMLElement {
           --font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif !important;
           font-family: var(--font-family);
         }
-
+        .controls-container {
+          position: absolute;
+          top: 20px;
+          background: white;
+          margin: 35px;
+          padding: 20px;
+          border-radius: 10px;
+          border: solid;
+          border: solid;
+        }
         .chat-container {
           display: flex;
           height: 100%;
