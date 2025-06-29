@@ -23,8 +23,8 @@ export class ApiService {
         localStorage.setItem('openai_api_key', key);
       } else {
         // redirect the page to /wc/google-login.html
-        const currentUrl = encodeURIComponent(window.location.pathname);
-        window.location.href = `/wc/google-login.html?returnUrl=${currentUrl}`;
+        // const currentUrl = encodeURIComponent(window.location.pathname);
+        // window.location.href = `/wc/google-login.html?returnUrl=${currentUrl}`;
         //throw new Error('API key not found in local storage');
       }
     }
