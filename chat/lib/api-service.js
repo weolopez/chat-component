@@ -11,87 +11,35 @@ export class ApiService {
     // ];
     this.useWebLLM = config.useWebLLM || false;
     this.webLLMEngine = config.engine || null;
+    this.initialize();
   }
 
   // Retrieve API key from localStorage or prompt user
-  // getApiKey() {
-  //   let key = localStorage.getItem('openai_api_key');
-  //   if (!key) {
-  //     key = prompt('Please enter your OpenAI API key:');
-  //     if (key) {
-  //       localStorage.setItem('openai_api_key', key);
-  //     } else {
-  //       // redirect the page to /wc/google-login.html
-  //       const currentUrl = encodeURIComponent(window.location.pathname);
-  //       window.location.href = `/wc/google-login.html?returnUrl=${currentUrl}`;
-  //       throw new Error('API key not found in local storage');
-  //     }
-  //   }
-  //   this.apiKey = key;
-  //   return key;
-  // }
+  getApiKey() {
+    let key = localStorage.getItem('openai_api_key');
+    if (!key) {
+      key = prompt('Please enter your OpenAI API key:');
+      if (key) {
+        localStorage.setItem('openai_api_key', key);
+      } else {
+        // redirect the page to /wc/google-login.html
+        const currentUrl = encodeURIComponent(window.location.pathname);
+        window.location.href = `/wc/google-login.html?returnUrl=${currentUrl}`;
+        //throw new Error('API key not found in local storage');
+      }
+    }
+    this.apiKey = key;
+    return key;
+  }
 
   // Initialize service: load API key, resume data, knowledge base
-  // async initialize() {
-    // this.getApiKey();
+  async initialize() {
+    this.getApiKey();
     // await this.fetchResumeData();
     // await this.loadKnowledgeBase();
-  // }
+  }
 
-  // Fetch resume data from the JSON file
-  // async fetchResumeData() {
-  //   try {
-  //     const response = await fetch('./chat/knowledge/resume.json');
-      
-  //     if (!response.ok) {
-  //       throw new Error(`Failed to fetch resume data: ${response.status} ${response.statusText}`);
-  //     }
-      
-  //     this.resumeData = await response.json();
-  //   } catch (error) {
-  //     console.error('Error fetching resume data:', error);
-  //     throw new Error(`Failed to load resume data: ${error.message}`);
-  //   }
-  // }
-
-  // Load knowledge base markdown files
-  // async loadKnowledgeBase() {
-  //   try {
-  //     // Load all knowledge files in parallel
-  //     const results = await Promise.allSettled(
-  //       this.knowledgeFiles.map(async (file) => {
-  //         const response = await fetch(file);
-  //         if (!response.ok) {
-  //           console.warn(`Could not load knowledge file: ${file}`);
-  //           return { file, content: null };
-  //         }
-          
-  //         // For markdown files, return the text content
-  //         const content = await response.text();
-  //         return { file, content };
-  //       })
-  //     );
-      
-  //     // Process results
-  //     let loadedCount = 0;
-  //     results.forEach((result) => {
-  //       if (result.status === 'fulfilled' && result.value.content) {
-  //         const fileName = result.value.file.split('/').pop().split('.')[0];
-  //         this.knowledgeBase[fileName] = result.value.content;
-  //         loadedCount++;
-  //       }
-  //     });
-      
-  //     if (loadedCount === 0) {
-  //       console.warn('No knowledge files were loaded');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error loading knowledge base:', error);
-  //     // Non-critical error - continue without knowledge base
-  //     console.warn(`Failed to load knowledge base: ${error.message}`);
-  //   }
-  // }
-
+ 
   // Streaming chat completion function
   async* streamChatCompletion(messages, options = {}) {
     if (this.useWebLLM) {
@@ -115,14 +63,8 @@ export class ApiService {
         console.error('Error in WebLLM streaming chat completion:', error);
         throw error;
       }
-    } else {
-      // Use OpenAI API
-      // if (!this.apiKey) {
-      //   throw new Error('API key not provided');
-      // }
-      
-      // const url = 'https://api.openai.com/v1/chat/completions'
-      const url = "/architect/completions";
+    } else if (this.apiKey) {
+      const url = 'https://api.openai.com/v1/chat/completions';
 
       const headers = {
         'Content-Type': 'application/json',
@@ -139,6 +81,66 @@ export class ApiService {
 
       try {
         const response = await fetch(url, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.statusText}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') {
+                return;
+              }
+              
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.choices && parsed.choices[0] && parsed.choices[0].delta) {
+                  yield parsed;
+                }
+              } catch (e) {
+                // Skip invalid JSON lines
+                continue;
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error in streaming chat completion:', error);
+        throw error;
+      }
+    } else {
+      const url = '/v1/chat/completions';
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.apiKey}`
+      };
+
+      const data = {
+        model: options.model || this.selectedModel,
+        messages: messages,
+        temperature: options.temperature || 0.7,
+        max_tokens: options.max_tokens || 1024,
+        stream: true
+      };
+
+      try {
+        const response = await fetch(this.url, {
           method: 'POST',
           headers: headers,
           body: JSON.stringify(data)

@@ -228,7 +228,13 @@ class ChatComponent extends HTMLElement {
 
   setupEventListeners() {
     console.log('ChatComponent: Setting up event listeners...');
-    
+
+    this.addEventListener('set-input', (e) => {
+      const text = e.detail.content;
+      this.setInput(text);
+      this.enableInput();
+    });
+
     // Header events
     this.addEventListener('memory-toggle', () => this.toggleMemoryPanel());
     this.addEventListener('history-toggle', () => this.toggleHistoryPanel());
@@ -464,6 +470,15 @@ class ChatComponent extends HTMLElement {
     const messageInput = this.shadowRoot.querySelector('message-input');
     if (messageInput) {
       messageInput.disable();
+    }
+  }
+
+
+  setInput(text) {
+    const messageInput = this.shadowRoot.querySelector('message-input');
+    if (messageInput) {
+      messageInput.value = text;
+      messageInput.focus();
     }
   }
 

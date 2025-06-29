@@ -214,19 +214,27 @@ export class ChatManager extends EventTarget {
       });
       
       let accumulatedResponse = '';
-      let final_answer=''
+      let final_answer
       // Process each chunk as it arrives
       for await (const chunk of responseStream) {
         final_answer=chunk.final_answer
         if (chunk.thinking) {
           accumulatedResponse += chunk.thinking+'\n'
           chunk.thinking = accumulatedResponse;
+        } else if (chunk.choices && chunk.choices[0]) {          
+          let piece = chunk.choices[0].delta.content;
+          if (piece) {
+            accumulatedResponse += chunk.choices[0].delta.content;
+          }
+          chunk.final_answer = accumulatedResponse
+          final_answer = accumulatedResponse
         }
         // Emit response update for UI
         this.dispatchEvent(new CustomEvent('responseUpdate', {
           detail: { content: chunk }
         }));
       }
+      if (!final_answer) console.error('No final answer received from API, accumulated response:', accumulatedResponse);
       
       // Complete the response
       const assistantMessage = {

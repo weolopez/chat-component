@@ -88,8 +88,7 @@ class MessageItem extends HTMLElement {
 
     retryBtn?.addEventListener('click', (e) => {
       e.stopPropagation();
-      alert('Retrying message needs to be completed...');
-      this.dispatchEvent(new CustomEvent('message-retry', {
+      this.dispatchEvent(new CustomEvent('set-input', {
         bubbles: true,
         composed: true,
         detail: { content: this.content }
@@ -191,7 +190,7 @@ class MessageItem extends HTMLElement {
     const isUser = role === 'user';
     const isAssistant = role === 'assistant';
 
-    if (!final_answer && isAssistant) {
+    if (!final_answer) {
       final_answer = content;
     }
 

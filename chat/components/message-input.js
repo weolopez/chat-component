@@ -472,8 +472,8 @@ class MessageInput extends HTMLElement {
         }
 
         .message-input {
-          width: 100%;
-          padding: 13px 0px 5px 5px;
+          width: 97%;
+          padding: 13px 0px 15px 15px;
           border: none;
           border-radius: 24px;
           background-color: var(--input-background, #F2F2F2);
@@ -590,12 +590,6 @@ class MessageInput extends HTMLElement {
         @media (max-width: 768px) {
           .input-container {
             padding: 10px 10px;
-          }
-          
-          .message-input {
-            padding: 0px 0px;
-            padding-right: 45px;
-            font-size: 0.9rem;
           }
           
           .send-button {
