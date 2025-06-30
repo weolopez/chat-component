@@ -6,7 +6,7 @@ import { EntityDB, getEmbeddingFromText } from './entity-db.js';
  */
 class KnowledgeLoader {
   constructor({
-    directoryPath = '/chat/knowledge/',
+    directoryPath = 'chat/knowledge/',
     model = 'Xenova/all-MiniLM-L6-v2',
     binarize = false
   }) {

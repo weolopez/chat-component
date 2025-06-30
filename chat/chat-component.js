@@ -110,13 +110,13 @@ class ChatComponent extends HTMLElement {
     // Add available themes to the component
     this.availableThemes = Object.keys(this.defaultThemes);
 
-    this.domain = this.getAttribute('domain') || 'https://weolopez.com';
+    this.domain = this.getAttribute('domain') || 'https://weolopez.com/';
     // Initialize ChatManager
     this.chatManager = new ChatManager({
       api: { model: this.selectedModel },
       history: { storageKey: 'chat-history' },
       memory: { historySize: 20 },
-      knowledge: { directoryPath: this.domain+'/chat/knowledge/' }
+      knowledge: { directoryPath: this.domain+'chat/knowledge/' }
     });
   }
 
