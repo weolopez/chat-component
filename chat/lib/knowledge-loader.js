@@ -6,7 +6,7 @@ import { EntityDB, getEmbeddingFromText } from './entity-db.js';
  */
 class KnowledgeLoader {
   constructor({
-    directoryPath = './knowledge/',
+    directoryPath = '/chat/knowledge/',
     model = 'Xenova/all-MiniLM-L6-v2',
     binarize = false
   }) {
@@ -127,7 +127,7 @@ class KnowledgeLoader {
       }
 
       // Fetch file content
-      const response = await fetch("." + filePath);
+      const response = await fetch(this.directoryPath + filePath);
       if (!response.ok) {
         throw new Error(`Failed to fetch file: ${response.status} ${response.statusText}`);
       }
@@ -216,7 +216,7 @@ class KnowledgeLoader {
       } else {
         console.warn(`Could not find index.json in ${this.directoryPath}. Attempting to discover markdown files.`);
         // Fallback to loading any .md files found in the directory
-        const directoryResponse = await fetch("." + this.directoryPath);
+        const directoryResponse = await fetch(this.directoryPath);
         if (directoryResponse.ok) {
           const html = await directoryResponse.text();
           const parser = new DOMParser();
