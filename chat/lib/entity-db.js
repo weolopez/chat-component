@@ -6,7 +6,7 @@ import { pipeline } from "/chat/huggingface/pipeline.js";
 import { env } from "/chat/huggingface/env.js";
 
 // Specify a custom location for models (defaults to '/models/').
-env.localModelPath = "./chat/huggingface";
+env.localModelPath = "/chat/huggingface";
 
 // Disable the loading of remote models from the Hugging Face Hub:
 // env.allowRemoteModels = false;
