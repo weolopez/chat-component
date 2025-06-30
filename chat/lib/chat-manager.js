@@ -2,7 +2,6 @@ import { ApiService } from './api-service.js';
 import { HistoryService } from './history-service.js';
 import { MemoryManager } from './memory-manager.js';
 import { KnowledgeLoader } from './knowledge-loader.js';
-import { renderModelSelector } from '../components/model-selector.js';
 
 export class ChatManager extends EventTarget {
   constructor(config = {}) {
