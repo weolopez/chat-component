@@ -1,7 +1,9 @@
-// import { openDB } from "idb";
-import { openDB } from 'https://cdn.jsdelivr.net/npm/idb@8/+esm';
-import { pipeline } from "https://cdn.jsdelivr.net/npm/@xenova/transformers";
-import { env } from "https://cdn.jsdelivr.net/npm/@xenova/transformers";
+import { openDB } from "/chat/huggingface/openDB.js";
+// import { openDB } from 'https://cdn.jsdelivr.net/npm/idb@8/+esm';
+// import { pipeline } from "https://cdn.jsde`ivr.net/npm/@xenova/transformers";
+// import { env } from "https://cdn.jsdelivr.net/npm/@xenova/transformers";
+import { pipeline } from "/chat/huggingface/pipeline.js";
+import { env } from "/chat/huggingface/env.js";
 
 // Specify a custom location for models (defaults to '/models/').
 env.localModelPath = "./chat/huggingface";
