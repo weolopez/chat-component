@@ -143,27 +143,54 @@ class MessageItem extends HTMLElement {
     }));
   }
 
+  copyCodeToClipboard(codeElement, buttonElement) {
+    const textToCopy = codeElement.textContent;
+
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      buttonElement.classList.add('copied');
+      buttonElement.setAttribute('title', 'Copied!');
+
+      setTimeout(() => {
+        buttonElement.classList.remove('copied');
+        buttonElement.setAttribute('title', 'Copy code');
+      }, 2000);
+    });
+  }
+
+  runCode(codeElement) {
+    const codeContent = codeElement.textContent;
+    const language = Array.from(codeElement.classList).find(cls => cls.startsWith('language-'))?.replace('language-', '') || 'plaintext';
+
+    //            this.dispatchEvent(new CustomEvent('PUBLISH_TEXT', { detail: { texts: [text] } }));
+    this.dispatchEvent(new CustomEvent('PUBLISH_TEXT', {
+      bubbles: true,
+      composed: true,
+      detail: { texts: [codeContent], language: language }
+    }));
+    console.log(`Attempting to run code (language: ${language}):\n${codeContent}`);
+  }
+
   markdownToHtml(text) {
     // Simple markdown parser for common elements
-    return text
-      // Code blocks
-      .replace(/```([a-z]*)\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>')
-      // Inline code
-      .replace(/`([^`]+)`/g, '<code>$1</code>')
-      // Bold
-      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      // Italic
-      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-      // Headers
-      .replace(/^### (.*$)/gm, '<h3>$1</h3>')
-      .replace(/^## (.*$)/gm, '<h2>$1</h2>')
-      .replace(/^# (.*$)/gm, '<h1>$1</h1>')
-      // Lists
-      .replace(/^\s*- (.*$)/gm, '<li>$1</li>')
-      // Links
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
-      // Line breaks
-      .replace(/\n/g, '<br>');
+    return marked.parse(text)
+      // // Code blocks
+      // .replace(/```([a-z]*)\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>')
+      // // Inline code
+      // .replace(/`([^`]+)`/g, '<code>$1</code>')
+      // // Bold
+      // .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      // // Italic
+      // .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+      // // Headers
+      // .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+      // .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+      // .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+      // // Lists
+      // .replace(/^\s*- (.*$)/gm, '<li>$1</li>')
+      // // Links
+      // .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+      // // Line breaks
+      // .replace(/\n/g, '<br>');
   }
 
   highlightCodeBlocks(element) {
@@ -394,8 +421,49 @@ class MessageItem extends HTMLElement {
           line-height: 1.5;
         }
 
+        .code-block-container {
+          position: relative;
+          margin: 8px 0; /* Adjust margin as needed */
+        }
+
+        .code-actions {
+          position: absolute;
+          top: 8px; /* Adjust position */
+          right: 8px; /* Adjust position */
+          display: flex;
+          gap: 4px;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+          z-index: 2; /* Ensure buttons are above code block */
+        }
+
+        .code-block-container:hover .code-actions {
+          opacity: 1;
+        }
+
+        .code-actions .action-btn {
+          width: 24px; /* Slightly smaller buttons for code actions */
+          height: 24px;
+          font-size: 0.8em;
+          background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
+          color: var(--text-color, #2A2A2A);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .code-actions .action-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+
+        .code-actions .action-btn svg {
+          width: 14px;
+          height: 14px;
+        }
+
+
         .message.assistant .message-content pre code.highlighted {
           color: var(--primary-color, #00A9E0);
+          background-color: black;
         }
 
         .message.assistant.latest .final-answer-content::after {
@@ -619,6 +687,44 @@ class MessageItem extends HTMLElement {
     if (isAssistant) {
       const contentEl = this.shadowRoot.querySelector('.message-content');
       this.highlightCodeBlocks(contentEl);
+
+      // New logic for code block actions
+      const codeBlocks = contentEl.querySelectorAll('pre code');
+      codeBlocks.forEach(block => {
+        const pre = block.parentNode; // The <pre> element
+        const container = document.createElement('div');
+        container.classList.add('code-block-container');
+
+        const actionsDiv = document.createElement('div');
+        actionsDiv.classList.add('code-actions');
+
+        // Copy button
+        const copyCodeBtn = document.createElement('button');
+        copyCodeBtn.classList.add('action-btn', 'copy-code-btn');
+        copyCodeBtn.setAttribute('title', 'Copy code');
+        copyCodeBtn.innerHTML = `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"></path></svg>`;
+        copyCodeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.copyCodeToClipboard(block, copyCodeBtn); // Pass the code block and button
+        });
+        actionsDiv.appendChild(copyCodeBtn);
+
+        // Run button
+        const runCodeBtn = document.createElement('button');
+        runCodeBtn.classList.add('action-btn', 'run-code-btn');
+        runCodeBtn.setAttribute('title', 'Run code');
+        runCodeBtn.innerHTML = `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>`;
+        runCodeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.runCode(block); // Pass the code block
+        });
+        actionsDiv.appendChild(runCodeBtn);
+
+        // Insert container before pre, then move pre and actions into container
+        pre.parentNode.insertBefore(container, pre);
+        container.appendChild(pre);
+        container.appendChild(actionsDiv);
+      });
     }
   }
 }

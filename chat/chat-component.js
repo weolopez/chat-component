@@ -1,5 +1,5 @@
 import { ChatManager } from './lib/chat-manager.js';
-
+import "https://cdn.jsdelivr.net/npm/marked/marked.min.js"
 // Import all sub-components
 import './components/loading-indicator.js';
 import './components/chat-header.js';
