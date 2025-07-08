@@ -9,6 +9,7 @@ import './components/message-input.js';
 import './components/chat-sidebar.js';
 import './components/memory-panel.js';
 import './components/history-panel.js';
+import './components/mode-selector.js';
 
 class ChatComponent extends HTMLElement {
   constructor() {
@@ -110,6 +111,7 @@ class ChatComponent extends HTMLElement {
     // Add available themes to the component
     this.availableThemes = Object.keys(this.defaultThemes);
     this.domain = this.getAttribute('domain') || window.location.origin || 'https://weolopez.com';
+
     // Initialize ChatManager
     this.chatManager = new ChatManager({
       api: { model: this.selectedModel },
@@ -117,6 +119,7 @@ class ChatComponent extends HTMLElement {
       memory: { historySize: 20 },
       knowledge: { directoryPath: this.domain+'/chat/knowledge/' }
     });
+
   }
 
   async connectedCallback() {
@@ -151,6 +154,20 @@ class ChatComponent extends HTMLElement {
     }
     
     this.setupTheme();
+        // Dispatch custom event
+
+    let slug = localStorage.getItem('chat-mode') || 'ask';
+    this.chatManager.setMode(slug);
+
+    const event = new CustomEvent('mode-selected', {
+      bubbles: true, // Allow event to bubble up through the DOM
+      composed: true, // Allow event to cross the shadow DOM boundary
+      detail: {
+        slug: slug,
+        modeData: this.chatManager.getMode()
+      }
+    });
+    this.dispatchEvent(event);
   }
 
   setupTheme() {
@@ -185,6 +202,14 @@ class ChatComponent extends HTMLElement {
   }
 
   setupChatManagerListeners() {
+    this.modeSelector = this.shadowRoot.querySelector('mode-selector');
+
+    document.addEventListener('mode-selected', (e) => {
+      console.log('ChatComponent: Mode selected:', e.detail.slug);
+      this.chatManager.setMode(e.detail.slug);
+      // modeSelector.setSelectedMode(e.detail.slug); // Update UI selection
+      this.modeSelector.style.visibility = 'hidden'; // Hide after selection
+    })
 
     this.chatManager.addEventListener('messageAdded', (e) => {
       this.updateMessageList();
@@ -226,25 +251,12 @@ class ChatComponent extends HTMLElement {
       this.handleError({ message: e.detail.message });
     });
   }
-
   changeModel() {
-    //add dialog to new element in shadowRoot
-    let selectedModel = 'gpt-4o-mini'; // Default to GPT-4o Mini
-    let newDiv = document.createElement('div');
-    let dialog = `
-    <div class="controls-container">
-      <div class="model-select-container">
-        <label for="model-selector">Model:</label>
-        <select class="model-selector" id="model-selector">
-          ${this.availableModels.map(model => 
-            `<option value="${model.id}" ${model.id === selectedModel ? 'selected' : ''}>${model.name}</option>`
-          ).join('')}
-        </select>
-      </div>
-    </div>
-  `;
-    newDiv.innerHTML = dialog;
-    this.shadowRoot.appendChild(newDiv);
+    
+    this.modeSelector.modes = this.chatManager.modesData.customModes;
+    this.modeSelector.setSelectedMode(this.chatManager.getMode().slug)
+    this.modeSelector.style.visibility = (this.modeSelector.style.visibility === 'hidden' || !this.modeSelector.style.visibility) ? 'visible' : 'hidden';
+
   }
 
   setupEventListeners() {
@@ -636,7 +648,7 @@ class ChatComponent extends HTMLElement {
           
           <!-- History Panel -->
           <history-panel></history-panel>
-          
+          <mode-selector style="visibility: hidden;"></mode-selector>
           <message-input 
             placeholder="Type your message..." 
             disabled>

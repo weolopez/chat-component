@@ -17,6 +17,7 @@ export class ChatManager extends EventTarget {
 
     // Initialize services
     this.apiService = new ApiService(config.api);
+    this.modesData = this.apiService.modesData;
     this.historyService = new HistoryService(config.history);
     
     // Initialize memory and knowledge systems (optional)
@@ -65,6 +66,8 @@ export class ChatManager extends EventTarget {
     this.state.isInitialized = true;
     this.dispatchEvent(new CustomEvent('initialized'));
   }
+  getMode() { return this.apiService.getMode(); }
+  setMode( mode ) { this.apiService.setMode( mode ); }
 
   async sendMessage(content, imageURL = null) {
     // "content": [
@@ -315,13 +318,6 @@ export class ChatManager extends EventTarget {
     return this.historyService.chatHistory;
   }
 
-  setModel(modelId) {
-    this.state.selectedModel = modelId;
-    this.apiService.selectedModel = modelId;
-    this.dispatchEvent(new CustomEvent('modelChanged', {
-      detail: { modelId }
-    }));
-  }
 
   setTheme(theme) {
     this.state.theme = theme;

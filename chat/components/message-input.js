@@ -92,6 +92,14 @@ class MessageInput extends HTMLElement {
       const sendButton = this.shadowRoot.querySelector('.send-button');
       const emojiButton = this.shadowRoot.querySelector('.emoji-btn');
 
+      document.addEventListener('mode-selected', (e) => {
+        console.log('MessageInput: Mode selected event detected:', e.detail.slug);
+        const modeButton = this.shadowRoot.getElementById('mode-btn');
+        if (modeButton) {
+          modeButton.innerHTML = e.detail.modeData.icon || `<span class="default-emoji">😀</span>`;
+        }
+      });
+
       console.log('MessageInput: DOM elements found:', {
         form: !!form,
         input: !!input,
@@ -399,6 +407,7 @@ class MessageInput extends HTMLElement {
 
         .input-container {
           padding: 10px 10px;
+          margin-right: 20px;
           border-top: 1px solid rgba(0, 0, 0, 0.1);
           background-color: var(--background-color, #ffffff);
           z-index: 1;
@@ -473,7 +482,7 @@ class MessageInput extends HTMLElement {
         }
 
         .message-input {
-          width: 97%;
+          width: 100%;
           padding: 13px 0px 15px 15px;
           border: none;
           border-radius: 24px;
@@ -591,6 +600,7 @@ class MessageInput extends HTMLElement {
         @media (max-width: 768px) {
           .input-container {
             padding: 10px 10px;
+            margin-right: 10px;
           }
           
           .send-button {
@@ -620,7 +630,7 @@ class MessageInput extends HTMLElement {
               rows="1"
             ></textarea>
             <div class="input-actions">
-              <button type="button" class="input-action-btn emoji-btn" title="Add emoji" ${isDisabled ? 'disabled' : ''}>
+              <button id="mode-btn" type="button" class="input-action-btn emoji-btn" title="Add emoji" ${isDisabled ? 'disabled' : ''}>
                 <svg viewBox="0 0 24 24"> <path fill="currentColor" d="M21,9L17,5V8H10V10H17V13M7,11L3,15L7,19V16H14V14H7V11Z"/> </svg>
               </button>
 

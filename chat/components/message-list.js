@@ -90,7 +90,10 @@ class MessageList extends HTMLElement {
     // Render each message
     this._messages.forEach((message, index) => {
       const messageType = typeof message.content;
-      if (messageType !== 'string') {
+      if (message.content === null || message.content === undefined) {
+        console.warn('Message content is null or undefined:', message);
+        return;
+      } else if (messageType !== 'string') {
         // console.warn('Message content should be a string:', message);
         // Handle non-string content appropriately
         const messageItem = document.createElement('message-item');

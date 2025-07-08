@@ -48,21 +48,21 @@
 
     <script type="module">
         // Import the chat component
-        import './chat/refactored-chat-component.js';
-        
+        import './chat/chat-component.js';
+
         // Wait for the component to load
         window.addEventListener('load', () => {
             const chatComponent = document.querySelector('chat-component');
-            
+
             // Add some test event listeners to monitor the history functionality
             if (chatComponent) {
                 console.log('Chat component loaded successfully');
-                
+
                 // Monitor for history-related events
                 chatComponent.addEventListener('chat-history-updated', (event) => {
                     console.log('Chat history updated:', event.detail);
                 });
-                
+
                 document.addEventListener('chat-loaded', (event) => {
                     console.log('Chat loaded:', event.detail);
                 });
@@ -73,7 +73,7 @@
         window.showChat = function() {
             console.log('Chat is ready to show');
         };
-        
+
         // Global function to close chat (required by chat component)
         window.closeChat = function() {
             console.log('Chat close requested');
