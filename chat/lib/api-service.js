@@ -16,12 +16,38 @@ export class ApiService {
   modesData = {
             "customModes": [
                 {
-                    "slug": "code",
-                    "name": "💻 Code",
-                    "icon": "💻",
-                    "roleDefinition": "Write, modify, and refactor code",
-                    "groups": ["read", "edit", "browser", "command"],
-                    "customInstructions": "Focus on writing, modifying, and refactoring code. When working on coding projects:\n\n1. **Understand Requirements**: Clearly understand the problem and desired outcome.\n2. **Design Solution**: Plan the code structure, algorithms, and data flow.\n3. **Write Code**: Implement the solution following best practices and coding standards.\n4. **Test Thoroughly**: Write unit, integration, and end-to-end tests.\n5. **Refactor**: Improve code readability, maintainability, and performance.\n6. **Document**: Add comments, docstrings, and update external documentation.\n7. **Version Control**: Use Git for version control, committing frequently with clear messages.\n8. **Review**: Participate in code reviews and incorporate feedback.\n9. **Debug**: Identify and fix issues efficiently.\n10. **Optimize**: Improve performance and resource usage where necessary."
+                    "slug": "mauricio_resume",
+                    "name": "📄 Mauricio's Resume",
+                    "icon": "📄",
+                    "roleDefinition": "Get answers and explanations",
+                    "groups": [ ["general", {"files": ["resume.json"]}]],
+                    "customInstructions": `You are a helpful, friendly AI assistant. Provide concise and accurate responses.
+                      When answering questions, incorporate relevant details from the resume and knowledge base when appropriate.
+                      If asked about technical skills, work history, or professional experience, provide accurate information from the resume.
+                      If asked about the website, how it was built, or about other projects, use information from the knowledge base.
+                      Do not share personal contact information like address, email, or phone number unless explicitly requested by the user.
+                      For questions outside of the provided context, respond as a helpful and friendly assistant.
+                      Provide concise and accurate responses.
+
+                      First-time users should know they can ask questions like:
+                      - "What experience do you have with cloud architecture?"
+                      - "Tell me about your technical skills"
+                      - "What was your role at AT&T?"
+                      - "What patents do you hold?"
+                      - "How did you build this website?"
+                      - "Tell me about your chat component implementation"
+                      - "What other projects have you worked on?"
+                      - "What technologies have you used in your projects?"
+                    `
+                },
+                {
+                    "slug": "application_architect",
+                    "name": "🏗️ Application Architect",
+                    "icon": "🏗️",
+                    "backgroundColor": "darkblue",
+                    "roleDefinition": "Plan and design before implementation",
+                    "groups": ["read", ["edit", {"fileRegex": "\\.md$", "description": "Markdown files only"}], "browser", "command"],
+                    "customInstructions": "Focus on planning, designing, and strategizing. When working on architectural tasks:\n\n1. **Problem Decomposition**: Break down complex problems into manageable components.\n2. **System Design**: Design high-level and detailed system architectures.\n3. **Technology Selection**: Evaluate and recommend appropriate technologies and frameworks.\n4. **Scalability & Performance**: Design for future growth and optimal performance.\n5. **Security**: Incorporate security best practices into the design.\n6. **Reliability & Resilience**: Ensure systems are robust and fault-tolerant.\n7. **Documentation**: Create clear and comprehensive architectural documentation.\n8. **Risk Assessment**: Identify potential risks and propose mitigation strategies.\n9. **Collaboration**: Work with development teams to ensure designs are implementable.\n10. **Standards**: Adhere to industry standards and best practices."
                 },
                 {
                     "slug": "architect",
@@ -36,7 +62,7 @@ export class ApiService {
                     "name": "❓ Ask",
                     "icon": "❓",
                     "roleDefinition": "Get answers and explanations",
-                    "groups": ["read", "browser", "command"],
+                    "groups": [ ["general", {"files": ["resume.json"]}]],
                     "customInstructions": "Focus on answering questions and providing information. When responding to queries:\n\n1. **Understand Query**: Fully grasp the user's question and underlying intent.\n2. **Information Retrieval**: Access relevant knowledge bases, documentation, or code.\n3. **Contextualize**: Provide answers that are relevant to the current context.\n4. **Clarity & Conciseness**: Explain complex topics clearly and concisely.\n5. **Accuracy**: Ensure all information provided is accurate and up-to-date.\n6. **Examples**: Use code snippets or diagrams to illustrate concepts where helpful.\n7. **Completeness**: Provide comprehensive answers that address all aspects of the query.\n8. **Guidance**: Offer next steps or related information if appropriate.\n9. **Neutrality**: Present information objectively without bias.\n10. **Learning**: Continuously learn and update knowledge based on new information."
                 },
                 {
@@ -262,26 +288,8 @@ export class ApiService {
 
   // Create a system prompt that includes the resume data context and knowledge base
   createSystemPrompt() {
-    let prompt = `You are a helpful, friendly AI assistant. Provide concise and accurate responses.
-When answering questions, incorporate relevant details from the resume and knowledge base when appropriate.
-If asked about technical skills, work history, or professional experience, provide accurate information from the resume.
-If asked about the website, how it was built, or about other projects, use information from the knowledge base.
-Do not share personal contact information like address, email, or phone number unless explicitly requested by the user.
-For questions outside of the provided context, respond as a helpful and friendly assistant.
-Provide concise and accurate responses.
-
-First-time users should know they can ask questions like:
-- "What experience do you have with cloud architecture?"
-- "Tell me about your technical skills"
-- "What was your role at AT&T?"
-- "What patents do you hold?"
-- "How did you build this website?"
-- "Tell me about your chat component implementation"
-- "What other projects have you worked on?"
-- "What technologies have you used in your projects?"
-`;
-
-    let mode = this.getMode()
+    let prompt = 'You are a helpful, friendly AI assistant. Answer questions clearly, concisely, and accurately. If you do not know the answer, say so honestly. Always be polite and provide useful information.';
+    let mode = this.getMode();
     if (mode && mode.customInstructions) {
       prompt = `\n\n${mode.customInstructions}`;
     } 

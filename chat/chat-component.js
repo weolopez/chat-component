@@ -117,7 +117,7 @@ class ChatComponent extends HTMLElement {
       api: { model: this.selectedModel },
       history: { storageKey: 'chat-history' },
       memory: { historySize: 20 },
-      knowledge: { directoryPath: this.domain+'/chat/knowledge/' }
+      // knowledge: { directoryPath: this.domain+'/chat/knowledge/' }
     });
 
   }

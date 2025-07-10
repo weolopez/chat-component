@@ -34,6 +34,7 @@ export class ChatManager extends EventTarget {
       console.warn('Knowledge system not available:', error.message);
       this.knowledgeLoader = null;
     }
+
     this.availableModels = [
       { id: "Qwen2.5-0.5B-Instruct-q0f16-MLC", name: "Qwen 0.5B (Fast)" },
       { id: "DeepSeek-R1-Distill-Qwen-7B-q4f16_1-MLC", name: "DeepSeek 7B (Smart)" }
@@ -45,14 +46,14 @@ export class ChatManager extends EventTarget {
     // await this.apiService.initialize();
 
     // Initialize knowledge system (memory is already initialized in constructor)
-    if (this.knowledgeLoader) {
-      try {
-        await this.knowledgeLoader.loadKnowledgeBase();
-      } catch (error) {
-        console.warn('Failed to load knowledge base:', error.message);
-        this.knowledgeLoader = null;
-      }
-    }
+    // if (this.knowledgeLoader) {
+    //   try {
+    //     await this.knowledgeLoader.loadKnowledgeBase();
+    //   } catch (error) {
+    //     console.warn('Failed to load knowledge base:', error.message);
+    //     this.knowledgeLoader = null;
+    //   }
+    // }
 
     // Load chat history
     this.historyService.loadHistory();
@@ -66,22 +67,11 @@ export class ChatManager extends EventTarget {
     this.state.isInitialized = true;
     this.dispatchEvent(new CustomEvent('initialized'));
   }
+
   getMode() { return this.apiService.getMode(); }
   setMode( mode ) { this.apiService.setMode( mode ); }
 
   async sendMessage(content, imageURL = null) {
-    // "content": [
-    //     {
-    //       "type": "text",
-    //       "text": "Please describe the content of this image."
-    //     },
-    //     {
-    //       "type": "image_url",
-    //       "image_url": {
-    //         "url": "https://example.com/image.jpg"
-    //       }
-    //     }
-    //   ]
     const userContent = []
     userContent.push({
       type: 'text',

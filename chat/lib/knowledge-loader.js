@@ -2,7 +2,7 @@ import { EntityDB, getEmbeddingFromText } from './entity-db.js';
 
 /**
  * KnowledgeLoader class that loads knowledge from markdown files 
- * and adds them to the EntityDB for vector search
+ * and adds them to the EntityDB for vector search 
  */
 class KnowledgeLoader {
   constructor({

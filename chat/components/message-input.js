@@ -96,7 +96,11 @@ class MessageInput extends HTMLElement {
         console.log('MessageInput: Mode selected event detected:', e.detail.slug);
         const modeButton = this.shadowRoot.getElementById('mode-btn');
         if (modeButton) {
+          if (e.detail.modeData.backgroundColor) {
+            modeButton.style.background = e.detail.modeData.backgroundColor;
+          }
           modeButton.innerHTML = e.detail.modeData.icon || `<span class="default-emoji">😀</span>`;
+
         }
       });
 
@@ -522,13 +526,14 @@ class MessageInput extends HTMLElement {
         }
 
         .input-action-btn {
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          border-radius: 14px;
+          padding: 10px;
           border: none;
           background-color: transparent;
           color: var(--text-color, #2A2A2A);
-          opacity: 0.6;
+          opacity: 1;
           cursor: pointer;
           display: flex;
           align-items: center;

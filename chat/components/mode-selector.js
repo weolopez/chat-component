@@ -88,6 +88,8 @@ class ModeSelectorComponent extends HTMLElement {
           font-size: 1.5em; /* Adjust icon size */
           margin-right: 10px;
           color: var(--icon-color);
+          border-radius: 14px;
+          padding: 10px;
         }
 
         .mode-details {
@@ -131,7 +133,7 @@ class ModeSelectorComponent extends HTMLElement {
             </svg>
           </div>
         </div>
-        <p class="description">Specialized personas that tailor Roo's behavior.<br>⌘ + . for next mode</p>
+        <p class="description">Specialized personas that tailor Ask Architect's behavior.</p>
         <div class="mode-list">
           <!-- Mode items will be dynamically inserted here -->
         </div>
@@ -193,7 +195,7 @@ class ModeSelectorComponent extends HTMLElement {
       const name = iconMatch ? iconMatch[2] : mode.name;
 
       modeItem.innerHTML = `
-        <span class="mode-icon">${icon}</span>
+        <span class="mode-icon" style="background: ${mode.backgroundColor || 'transparent'}">${icon}</span>
         <div class="mode-details">
           <div class="mode-name">${name}</div>
           <div class="mode-description">${mode.roleDefinition.split('\n')[0]}</div>
