@@ -5,7 +5,8 @@ class ModeSelectorComponent extends HTMLElement {
     template.innerHTML = `
       <style>
         :host {
-
+          max-height: 600px;
+          overflow-y: auto;
           z-index: 1;
           position: absolute;
           right: 0px;
