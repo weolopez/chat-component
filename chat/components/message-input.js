@@ -14,6 +14,28 @@ class MessageInput extends HTMLElement {
   connectedCallback() {
     console.log('MessageInput: connectedCallback called');
     this.render();
+
+      this.emojiButton = this.shadowRoot.querySelector('.emoji-btn');
+
+      document.addEventListener('mode-selected', (e) => {
+        console.log('MessageInput: Mode selected event detected:', e.detail.slug);
+        const modeButton = this.shadowRoot.getElementById('mode-btn');
+        this.mode = e.detail.modeData
+        if (modeButton) {
+          if (e.detail && e.detail.modeData) {
+            if (e.detail.modeData.backgroundColor) modeButton.style.background = e.detail.modeData.backgroundColor;
+            modeButton.innerHTML = e.detail.modeData.icon || `<span class="default-emoji">😀</span>`
+            const updatedChat = { mode: e.detail.modeData.slug };
+            this.dispatchEvent(new CustomEvent('chat-update', {
+              bubbles: true,
+              composed: true,
+              detail: { updatedChat }
+            }));
+          }
+
+        }
+      });
+
     // Use a small delay to ensure Shadow DOM is fully rendered
     setTimeout(() => {
       this.setupEventListeners();
@@ -82,6 +104,19 @@ class MessageInput extends HTMLElement {
       console.log('MessageInput: Event listeners already setup, skipping');
       return;
     }
+      
+      this.emojiButton = this.shadowRoot.querySelector('.emoji-btn');
+
+      if (this.emojiButton) {
+        console.warn('MessageInput: Adding change model');
+        this.emojiButton.addEventListener('click', (e) => {
+          console.log('MessageInput: Emoji button clicked');
+          e.preventDefault();
+          this.handleChangeModelButtonClick();
+        });
+      } else {
+        console.warn('MessageInput: Emoji button element not found');
+      }
 
     console.log('MessageInput: Setting up event listeners...');
 
@@ -90,26 +125,13 @@ class MessageInput extends HTMLElement {
       const form = this.shadowRoot.querySelector('form');
       const input = this.shadowRoot.querySelector('.message-input');
       const sendButton = this.shadowRoot.querySelector('.send-button');
-      const emojiButton = this.shadowRoot.querySelector('.emoji-btn');
 
-      document.addEventListener('mode-selected', (e) => {
-        console.log('MessageInput: Mode selected event detected:', e.detail.slug);
-        const modeButton = this.shadowRoot.getElementById('mode-btn');
-        if (modeButton) {
-          if (e.detail.modeData.backgroundColor) {
-            modeButton.style.background = e.detail.modeData.backgroundColor;
-          }
-          modeButton.innerHTML = e.detail.modeData.icon || `<span class="default-emoji">😀</span>`;
-
-        }
-      });
-
-      console.log('MessageInput: DOM elements found:', {
-        form: !!form,
-        input: !!input,
-        sendButton: !!sendButton,
-        emojiButton: !!emojiButton
-      });
+      // console.log('MessageInput: DOM elements found:', {
+      //   form: !!form,
+      //   input: !!input,
+      //   sendButton: !!sendButton,
+      //   this.emojiButton: !!this.emojiButton
+      // });
 
       if (form) {
         console.log('MessageInput: Adding form submit listener');
@@ -194,16 +216,6 @@ class MessageInput extends HTMLElement {
         console.error('MessageInput: Send button element not found!');
       }
 
-      if (emojiButton) {
-        console.warn('MessageInput: Adding change model');
-        emojiButton.addEventListener('click', (e) => {
-          console.log('MessageInput: Emoji button clicked');
-          e.preventDefault();
-          this.handleChangeModelButtonClick();
-        });
-      } else {
-        console.warn('MessageInput: Emoji button element not found');
-      }
 
       // Mark as setup
       this.eventListenersSetup = true;
@@ -649,6 +661,14 @@ class MessageInput extends HTMLElement {
         </form>
       </div>
     `;
+    
+      const emojiButton = this.shadowRoot.querySelector('.emoji-btn');
+      if (this.mode) {
+        if (this.mode.backgroundColor) {
+              emojiButton.style.background = this.mode.backgroundColor;
+            }
+        emojiButton.innerHTML = this.mode.icon || `<span class="default-emoji">😀</span>`;
+      }
 
     // Setup auto-resize for textarea
     const textarea = this.shadowRoot.querySelector('.message-input');

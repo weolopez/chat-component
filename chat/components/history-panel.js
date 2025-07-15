@@ -47,6 +47,10 @@ class HistoryPanel extends HTMLElement {
 
   set activeChatId(value) {
     this._activeChatId = value;
+
+    if (this._activeChatId)
+      localStorage.setItem('currentChatId', this._activeChatId || null);
+    
     this.updateContent();
   }
 
@@ -120,6 +124,28 @@ class HistoryPanel extends HTMLElement {
       historyItem.addEventListener('click', (e) => {
         // Don't trigger if clicking the delete button
         if (e.target.closest('.history-delete-btn')) return;
+        // Don't trigger if clicking the title
+        if (e.target.closest('.history-item-title')) {
+              const chatTitle = e.target.closest('.history-item-title')
+
+              chatTitle.addEventListener('click', (e) => {
+                //make contenteditable
+                chatTitle.contentEditable = true;
+                chatTitle.focus();
+                chatTitle.addEventListener('blur', () => {
+                  chatTitle.contentEditable = false;
+                  const updatedChat = { name: chatTitle.textContent.trim() };
+                  this.dispatchEvent(new CustomEvent('chat-update', {
+                    bubbles: true,
+                    composed: true,
+                    detail: { updatedChat }
+                  }));
+                }, { once: true });
+
+                e.stopPropagation();
+              });
+              return
+        }
         this.dispatchEvent(new CustomEvent('chat-load', {
           bubbles: true,
           composed: true,

@@ -11,7 +11,7 @@ export class ChatManager extends EventTarget {
       messages: [],
       isProcessing: false,
       isInitialized: false,
-      currentChatId: null,
+      currentChatId: config.currentChatId || null,
       selectedModel: config.model || 'gpt-4o-mini'
     };
 
@@ -19,7 +19,7 @@ export class ChatManager extends EventTarget {
     this.apiService = new ApiService(config.api);
     this.modesData = this.apiService.modesData;
     this.historyService = new HistoryService(config.history);
-    
+
     // Initialize memory and knowledge systems (optional)
     try {
       this.memoryManager = new MemoryManager(config.memory || {});
@@ -27,7 +27,7 @@ export class ChatManager extends EventTarget {
       console.warn('Memory system not available:', error.message);
       this.memoryManager = null;
     }
-    
+
     try {
       this.knowledgeLoader = new KnowledgeLoader(config.knowledge || {});
     } catch (error) {
@@ -58,7 +58,7 @@ export class ChatManager extends EventTarget {
     // Load chat history
     this.historyService.loadHistory();
     this.state.currentChatId = this.historyService.activeChat;
-    
+
     // Load messages for the current chat
     if (this.state.currentChatId) {
       this.state.messages = this.historyService.getMessages(this.state.currentChatId);
@@ -66,121 +66,69 @@ export class ChatManager extends EventTarget {
 
     this.state.isInitialized = true;
     this.dispatchEvent(new CustomEvent('initialized'));
+
+    this.loadChat(this.state.currentChatId);
   }
-
-  getMode() { return this.apiService.getMode(); }
-  setMode( mode ) { this.apiService.setMode( mode ); }
-
-  async sendMessage(content, imageURL = null) {
-    const userContent = []
-    userContent.push({
-      type: 'text',
-      text: content
-    });
-    if (imageURL) {
-      userContent.push({
-        type: 'image_url',
-        image_url: {
-          url: imageURL
-        }
-      });
-    }
-    // Add user message with timestamp
-    // or just content
-    const userMessage = {
-      role: 'user',
-      content: userContent,
-      timestamp: new Date().toISOString()
-    };
-    
+  updateState(userMessage) {
     this.state.messages.push(userMessage);
     this.state.isProcessing = true;
-    
+
     // Emit events for UI updates
     this.dispatchEvent(new CustomEvent('messageAdded', {
       detail: { message: userMessage }
     }));
-    
+
     this.dispatchEvent(new CustomEvent('stateChanged', {
       detail: { state: this.state }
     }));
-    
-    // Add message to memory if available
-    if (this.memoryManager) {
-      await this.memoryManager.addMessage(userMessage);
-    }
-    
-    // Build context with memory and knowledge if available
-    let context = {};
-    
-    try {
-      if (this.memoryManager) {
-        // Get context from memory
-        context = await this.memoryManager.buildContext(content);
-        
-        // Search knowledge base if available
-        let knowledgeResults = [];
-        if (this.knowledgeLoader) {
-          knowledgeResults = await this.knowledgeLoader.query(content, 3);
-        }
-        
-        // Format context as messages for the LLM
-        const messageContext = this.memoryManager.formatContextMessages(context, content, imageURL);
-        
-        // Add knowledge to the context if available
-        if (knowledgeResults && knowledgeResults.length > 0) {
-          let knowledgeContext = "I've found some relevant information that might help answer the question:\n\n";
-          
-          knowledgeResults.forEach((result, index) => {
-            knowledgeContext += `[${index + 1}] From ${result.document?.title || 'documentation'}:\n${result.text}\n\n`;
-          });
-          
-          // Add or update system message with knowledge
-          if (messageContext.length > 0 && messageContext[0].role === 'system') {
-            messageContext[0].content += '\n\n' + knowledgeContext;
-          } else {
-            messageContext.unshift({
-              role: 'system',
-              content: knowledgeContext
-            });
-          }
-        }
-        
-        // Add placeholder for assistant response
-        const assistantMessage = {
-          role: 'assistant',
-          content: '',
-          timestamp: new Date().toISOString()
-        };
-        this.state.messages.push(assistantMessage);
-        
-        this.dispatchEvent(new CustomEvent('messageAdded', {
-          detail: { message: assistantMessage }
-        }));
-        
-        // Generate response with enhanced context
-        await this.generateResponse(messageContext);
+  }
+
+  getMode() { return this.apiService.getMode(); }
+  setMode(mode) { this.apiService.setMode(mode); }
+
+  async sendMessage(content, imageURL = null) {
+    const userMessage = this.apiService.getUserMessage(content, imageURL);
+    this.updateState(userMessage);
+    await this.memoryManager.addMessage(userMessage);
+    let context = await this.memoryManager.buildContext(content);
+    let knowledgeResults = await this.knowledgeLoader.query(content, 3);
+    const messageContext = this.memoryManager.formatContextMessages(context, content, imageURL);
+
+    const assistantMessage = {
+      role: 'assistant',
+      content: '',
+      timestamp: new Date().toISOString()
+    };
+    this.state.messages.push(assistantMessage);
+
+    this.dispatchEvent(new CustomEvent('messageAdded', {
+      detail: { message: assistantMessage }
+    }));
+
+    if (knowledgeResults && knowledgeResults.length > 0) {
+      let knowledgeContext = "I've found some relevant information that might help answer the question:\n\n";
+
+      knowledgeResults.forEach((result, index) => {
+        knowledgeContext += `[${index + 1}] From ${result.document?.title || 'documentation'}:\n${result.text}\n\n`;
+      });
+
+      // Add or update system message with knowledge
+      if (messageContext.length > 0 && messageContext[0].role === 'system') {
+        messageContext[0].content += '\n\n' + knowledgeContext;
       } else {
-        // Fallback to regular approach
-        const assistantMessage = {
-          role: 'assistant',
-          content: '',
-          timestamp: new Date().toISOString()
-        };
-        this.state.messages.push(assistantMessage);
-        
-        this.dispatchEvent(new CustomEvent('messageAdded', {
-          detail: { message: assistantMessage }
-        }));
-        
-        // Generate response with regular messages
-        await this.generateResponse(this.state.messages.slice(0, -1));
+        messageContext.unshift({
+          role: 'system',
+          content: knowledgeContext
+        });
       }
-    } catch (error) {
-      console.error('Error building context for message:', error);
-      throw error;
+
+    } else {
+      messageContext = this.state.messages.slice(0, -1)
     }
-    
+      
+      // Generate response with enhanced context
+      await this.generateResponse(messageContext);
+
     // Update and save chat history
     this.historyService.updateMessages(this.state.messages);
   }
@@ -189,7 +137,8 @@ export class ChatManager extends EventTarget {
     try {
       // Prepare the system prompt with resume data and knowledge base
       const systemPrompt = this.apiService.createSystemPrompt();
-      
+      const tools = this.apiService.getTools();
+
       // Add system prompt if not present, or replace it
       if (!messages.some(msg => msg.role === 'system')) {
         messages.unshift({
@@ -203,22 +152,24 @@ export class ChatManager extends EventTarget {
           messages[systemIndex].content = systemPrompt + '\n\n' + messages[systemIndex].content;
         }
       }
-      
+
+
       // Use ApiService to generate streaming response
       const responseStream = this.apiService.streamChatCompletion(messages, {
+        tools,
         temperature: 0.7,
         max_tokens: 1024
       });
-      
+
       let accumulatedResponse = '';
       let final_answer
       // Process each chunk as it arrives
       for await (const chunk of responseStream) {
-        final_answer=chunk.final_answer
+        final_answer = chunk.final_answer
         if (chunk.thinking) {
-          accumulatedResponse += chunk.thinking+'\n'
+          accumulatedResponse += chunk.thinking + '\n'
           chunk.thinking = accumulatedResponse;
-        } else if (chunk.choices && chunk.choices[0]) {          
+        } else if (chunk.choices && chunk.choices[0]) {
           let piece = chunk.choices[0].delta.content;
           if (piece) {
             accumulatedResponse += chunk.choices[0].delta.content;
@@ -232,31 +183,31 @@ export class ChatManager extends EventTarget {
         }));
       }
       if (!final_answer) console.error('No final answer received from API, accumulated response:', accumulatedResponse);
-      
+
       // Complete the response
       const assistantMessage = {
         role: 'assistant',
         content: final_answer,
         timestamp: this.state.messages[this.state.messages.length - 1].timestamp
       };
-      
+
       this.state.messages[this.state.messages.length - 1] = assistantMessage;
-      
+
       // Add to memory if available
       if (this.memoryManager) {
         await this.memoryManager.addMessage(assistantMessage);
       }
-      
+
       this.state.isProcessing = false;
-      
+
       this.dispatchEvent(new CustomEvent('responseComplete', {
         detail: { message: assistantMessage }
       }));
-      
+
       this.dispatchEvent(new CustomEvent('stateChanged', {
         detail: { state: this.state }
       }));
-      
+
     } catch (error) {
       console.error('Generation error:', error);
       this.state.isProcessing = false;
@@ -272,7 +223,7 @@ export class ChatManager extends EventTarget {
     if (this.state.currentChatId) {
       this.historyService.updateMessages(this.state.messages);
     }
-    
+
     this.historyService.createNewChat();
     this.state.currentChatId = this.historyService.activeChat;
     this.state.messages = [];
@@ -286,13 +237,25 @@ export class ChatManager extends EventTarget {
     if (this.state.currentChatId) {
       this.historyService.updateMessages(this.state.messages);
     }
-    
+
     this.historyService.loadChat(chatId);
     this.state.currentChatId = chatId;
     this.state.messages = this.historyService.getMessages(chatId);
+
     this.dispatchEvent(new CustomEvent('chatChanged', {
       detail: { chatId }
     }));
+
+    let chat = this.historyService.getChat(chatId);
+    let modeData = this.modesData.customModes.find(m => m.slug === chat.mode);
+    document.dispatchEvent(new CustomEvent('mode-selected', {
+        bubbles: true, // Allow event to bubble up through the DOM
+        composed: true, // Allow event to cross the shadow DOM boundary
+        detail: {
+          slug: chat.mode || 'default',
+          modeData
+        }
+      }))
   }
 
   deleteChat(chatId) {
@@ -330,7 +293,7 @@ export class ChatManager extends EventTarget {
 
   async getMemoryInfo() {
     console.log('ChatManager: getMemoryInfo called, memoryManager:', this.memoryManager);
-    
+
     if (!this.memoryManager) {
       console.log('ChatManager: No memory manager available.');
       return {
@@ -342,21 +305,21 @@ export class ChatManager extends EventTarget {
         knowledgeDetails: this.knowledgeLoader ? await this.getKnowledgeDetails() : null
       };
     }
-    
+
     try {
       // Get memory information from the memory manager
       const recentMessages = this.memoryManager.getRecentMessages();
       const conversationHistory = this.memoryManager.conversationHistory || [];
-      
+
       console.log('ChatManager: Recent messages from memoryManager:', recentMessages);
       console.log('ChatManager: Conversation history from memoryManager:', conversationHistory);
-      
+
       // Get knowledge details if available
       let knowledgeDetails = null;
       if (this.knowledgeLoader) {
         knowledgeDetails = await this.getKnowledgeDetails();
       }
-      
+
       return {
         recentCount: recentMessages.length,
         totalCount: conversationHistory.length,
@@ -383,11 +346,11 @@ export class ChatManager extends EventTarget {
     if (!this.knowledgeLoader) {
       return null;
     }
-    
+
     try {
       // Get loaded files information
       const loadedFiles = Array.from(this.knowledgeLoader.loadedFiles);
-      
+
       // Try to get some sample knowledge entries
       let sampleEntries = [];
       if (this.knowledgeLoader.db) {
@@ -398,7 +361,7 @@ export class ChatManager extends EventTarget {
           console.warn('Could not retrieve sample knowledge entries:', error);
         }
       }
-      
+
       return {
         loadedFiles: loadedFiles,
         fileCount: loadedFiles.length,

@@ -37,11 +37,32 @@ export class HistoryService {
     return chat ? [...chat.messages] : [];
   }
 
+
+  // Get messages for a specific chat
+  getChat(chatId) {
+    const chat = this.chatHistory.find(c => c.id === chatId);
+    return chat ? { ...chat } : null;
+  }
+
   // Update messages for the current active chat
   updateMessages(messages) {
     const chat = this.chatHistory.find(c => c.id === this.activeChat);
     if (chat) {
       chat.messages = [...messages];
+      this.saveHistory();
+    }
+  }
+  updateChat(updatedChat) {
+    let chat = this.chatHistory.find(c => c.id === this.activeChat);
+    if (chat) {
+      chat = { ...chat, ...updatedChat };
+      //update this.chatHistory
+      const idx = this.chatHistory.findIndex(c => c.id === chat.id);
+      if (idx !== -1) {
+        this.chatHistory[idx] = chat;
+      } else {
+        this.chatHistory.push(chat);  
+      }
       this.saveHistory();
     }
   }

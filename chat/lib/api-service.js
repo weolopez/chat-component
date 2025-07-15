@@ -44,9 +44,9 @@ export class ApiService {
                     "slug": "application_architect",
                     "name": "🏗️ Application Architect",
                     "icon": "🏗️",
-                    "backgroundColor": "darkblue",
+                    "backgroundColor": "lightblue",
                     "roleDefinition": "Plan and design before implementation",
-                    "groups": ["read", ["edit", {"fileRegex": "\\.md$", "description": "Markdown files only"}], "browser", "command"],
+                    "groups": [["tools", ["query_solution_architecture_rag", "query_application_architecture_rag"]]],
                     "customInstructions": "Focus on planning, designing, and strategizing. When working on architectural tasks:\n\n1. **Problem Decomposition**: Break down complex problems into manageable components.\n2. **System Design**: Design high-level and detailed system architectures.\n3. **Technology Selection**: Evaluate and recommend appropriate technologies and frameworks.\n4. **Scalability & Performance**: Design for future growth and optimal performance.\n5. **Security**: Incorporate security best practices into the design.\n6. **Reliability & Resilience**: Ensure systems are robust and fault-tolerant.\n7. **Documentation**: Create clear and comprehensive architectural documentation.\n8. **Risk Assessment**: Identify potential risks and propose mitigation strategies.\n9. **Collaboration**: Work with development teams to ensure designs are implementable.\n10. **Standards**: Adhere to industry standards and best practices."
                 },
                 {
@@ -143,6 +143,7 @@ export class ApiService {
       try {
         const chunks = await this.webLLMEngine.chat.completions.create({
           messages,
+          tools: options.tools || [],
           temperature: options.temperature || 0.7,
           max_tokens: options.max_tokens || 1024,
           stream: true,
@@ -166,6 +167,7 @@ export class ApiService {
       const data = {
         model: options.model || this.selectedModel,
         messages: messages,
+        tools: options.tools || [],
         temperature: options.temperature || 0.7,
         max_tokens: options.max_tokens || 1024,
         stream: true
@@ -226,6 +228,7 @@ export class ApiService {
       const data = {
         model: options.model || this.selectedModel,
         messages: messages,
+        tools: options.tools || [],
         temperature: options.temperature || 0.7,
         max_tokens: options.max_tokens || 1024,
         stream: true
@@ -294,5 +297,40 @@ export class ApiService {
       prompt = `\n\n${mode.customInstructions}`;
     } 
     return prompt;
+  }
+  getTools() {
+    const mode = this.getMode();
+    if (mode && mode.groups) {
+      const toolsGroup = mode.groups.find(g => g[0] === 'tools');
+      if (toolsGroup && Array.isArray(toolsGroup[1])) {
+        return toolsGroup[1];
+      }
+    }
+    return [];
+  }
+
+  getUserMessage(content, imageURL = null) {
+    const userContent = [];
+    userContent.push({
+      type: 'text',
+      text: content
+    });
+    if (imageURL) {
+      userContent.push({
+        type: 'image_url',
+        image_url: {
+          url: imageURL
+        }
+      });
+    }
+    // Add user message with timestamp
+    // or just content
+    const userMessage = {
+      role: 'user',
+      content: userContent,
+      timestamp: new Date().toISOString()
+    };
+
+    return userMessage;
   }
 }

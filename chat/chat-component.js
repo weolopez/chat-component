@@ -112,11 +112,15 @@ class ChatComponent extends HTMLElement {
     this.availableThemes = Object.keys(this.defaultThemes);
     this.domain = this.getAttribute('domain') || window.location.origin || 'https://weolopez.com';
 
+    //get currentChatId from localStorage or default to null
+    this.currentChatId = localStorage.getItem('currentChatId') || null;
+
     // Initialize ChatManager
     this.chatManager = new ChatManager({
       api: { model: this.selectedModel },
       history: { storageKey: 'chat-history' },
       memory: { historySize: 20 },
+      currentChatId: this.currentChatId
       // knowledge: { directoryPath: this.domain+'/chat/knowledge/' }
     });
 
@@ -153,21 +157,7 @@ class ChatComponent extends HTMLElement {
       this.handleError({ message: `Failed to initialize: ${error.message}` });
     }
     
-    this.setupTheme();
-        // Dispatch custom event
-
-    let slug = localStorage.getItem('chat-mode') || 'ask';
-    this.chatManager.setMode(slug);
-
-    const event = new CustomEvent('mode-selected', {
-      bubbles: true, // Allow event to bubble up through the DOM
-      composed: true, // Allow event to cross the shadow DOM boundary
-      detail: {
-        slug: slug,
-        modeData: this.chatManager.getMode()
-      }
-    });
-    this.dispatchEvent(event);
+    this.setupTheme()
   }
 
   setupTheme() {
@@ -289,6 +279,9 @@ class ChatComponent extends HTMLElement {
     this.addEventListener('chat-load', (e) => this.loadChat(e.detail.chatId));
     this.addEventListener('chat-delete', (e) => this.deleteChat(e.detail.chatId));
 
+    // Chat events
+    this.addEventListener('chat-update', (e) => this.updateChat(e.detail.updatedChat).bind(this));
+
     // Panel close events
     this.addEventListener('memory-close', () => this.closeMemoryPanel());
     this.addEventListener('history-close', () => this.closeHistoryPanel());
@@ -308,6 +301,10 @@ class ChatComponent extends HTMLElement {
     });
   }
 
+  updateChat(updatedChat) {
+    this.chatManager.historyService.updateChat(updatedChat);
+  }
+
   // UI Update Methods
   updateUI(state) {
     if (state.isProcessing !== undefined) {
@@ -316,6 +313,7 @@ class ChatComponent extends HTMLElement {
         this.showTypingIndicator();
       } else {
         this.enableInput();
+        this.updateStatus('Ready');
       }
     }
   }
@@ -324,7 +322,7 @@ class ChatComponent extends HTMLElement {
     const loadingIndicator = this.shadowRoot.querySelector('loading-indicator');
     if (loadingIndicator) {
       loadingIndicator.progress = progress.progress;
-      loadingIndicator.status = progress.text;
+      loadingIndicator = progress.text;
     }
   }
 
